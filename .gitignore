@@ -1,19 +1,17 @@
-# Satellite imagery
-data/
-*.zip
-*.SAFE/
-*.EOF
-*.tiff
-*.tif
+cd ~/vazante_gmtsar
 
-# GMTSAR processing outputs
+cat > .gitignore <<'EOF'
+data/
 processing/
 results/
 logs/
-
-# Temporary files
-*.log
-*.tmp
-__pycache__/
-
-
+*.SAFE/
+*.zip
+*.EOF
+*.grd
+*.tif
+*.SLC
+*.LED
+*.PRM
+*.dat
+EOF

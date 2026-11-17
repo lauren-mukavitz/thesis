@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-set -e
+set -euo pipefail
+shopt -s nullglob
 
 cd ~/vazante_gmtsar/data/raw
 

@@ -1,0 +1,31 @@
+data/
+processing/
+results/
+logs/
+*.SAFE/
+*.zip
+*.EOF
+*.grd
+*.tif
+*.SLC
+*.LED
+*.PRM
+*.dat# Satellite imagery
+data/
+*.zip
+*.SAFE/
+*.EOF
+*.tiff
+*.tif
+
+# GMTSAR processing outputs
+processing/
+results/
+logs/
+
+# Temporary files
+*.log
+*.tmp
+__pycache__/
+
+

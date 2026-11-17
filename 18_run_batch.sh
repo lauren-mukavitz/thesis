@@ -1,16 +1,13 @@
-
 #!/usr/bin/env bash
-set -e
+set -euo pipefail
 
 cd ~/vazante_gmtsar/processing/F2/raw
 
-# Link downloaded precise orbit files
 for file in ../../orbit/*.EOF; do
     [ -f "$file" ] || continue
     ln -sfn "$(realpath "$file")" .
 done
 
-# Generate data.in
 python3 - <<'PY'
 from pathlib import Path
 from datetime import datetime
@@ -24,20 +21,16 @@ for xml in sorted(Path(".").glob("*iw2*vv*.xml")):
     matches = []
 
     for orbit in Path(".").glob("*.EOF"):
-        if satellite not in orbit.name.upper().split("_"):
+        if not orbit.name.upper().startswith(satellite + "_"):
             continue
 
         start, end = orbit.stem.split("_V")[-1].split("_")
 
-        if (datetime.strptime(start, "%Y%m%dT%H%M%S")
-                <= date <=
-                datetime.strptime(end, "%Y%m%dT%H%M%S")):
+        if datetime.strptime(start, "%Y%m%dT%H%M%S") <= date <= datetime.strptime(end, "%Y%m%dT%H%M%S"):
             matches.append(orbit.name)
 
     if len(matches) != 1:
-        raise RuntimeError(
-            f"Expected one orbit for {xml.name}, found {len(matches)}"
-        )
+        raise RuntimeError(f"Expected one orbit for {xml.name}, found {len(matches)}")
 
     lines.append(f"{xml.stem}:{matches[0]}")
 
@@ -48,10 +41,8 @@ Path("data.in").write_text("\n".join(lines) + "\n")
 print(f"Created data.in with {len(lines)} scenes")
 PY
 
-# Preprocess scenes
 preproc_batch_tops.csh data.in ../topo/dem.grd 2
 
-# Generate interferogram pairs within 48 days
 python3 - <<'PY'
 from pathlib import Path
 from datetime import datetime
@@ -72,11 +63,21 @@ for (date1, name1), (date2, name2) in combinations(scenes, 2):
         pairs.append(f"{name1}:{name2}")
 
 if not pairs:
-    raise RuntimeError("No valid interferogram pairs found")
+    raise RuntimeError("No interferogram pairs found")
 
-Path("intf.in").write_text("\n".join(pairs) + "\n")
+Path("../intf.in").write_text("\n".join(pairs) + "\n")
 print(f"Created intf.in with {len(pairs)} pairs")
 PY
 
-# Generate interferograms
+cd ~/vazante_gmtsar/processing/F2
 intf_tops.csh intf.in batch_tops.config
+
+UNWRAPPED=$(find intf_all -name "unwrap.grd" | wc -l)
+echo "Unwrapped interferograms: $UNWRAPPED"
+
+if [ "$UNWRAPPED" -eq 0 ]; then
+    echo "ERROR: No unwrapped interferograms produced"
+    exit 1
+fi
+
+echo "Step 18 complete."

@@ -11,6 +11,6 @@ if [ ! -f processing/topo/dem.grd ]; then
     make_dem.csh -47.5 -45.9 -19.4 -17.3 1
 fi
 
-ln -sfn ../topo/dem.grd processing/F2/topo/dem.grd
+ln -sfn "$(realpath processing/topo/dem.grd)" processing/F2/topo/dem.grd
 
 echo "DEM prepared."

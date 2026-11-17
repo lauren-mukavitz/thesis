@@ -1,21 +1,29 @@
 
 #!/usr/bin/env bash
-set -e
+set -euo pipefail
 
-# Copy selected Sentinel-1 scenes from external drive to WSL
-
-SOURCE="/mnt/d/Mukavitz Thesis/Satellite Data/2015"
+SOURCE="/mnt/d/Mukavitz Thesis/Satellite Data"
 DEST="$HOME/vazante_gmtsar/data/raw"
+BATCH="${1:?Usage: bash 12_prepare_batch_processing.sh batch.txt}"
 
 mkdir -p "$DEST"
 
-for date in 07_05 11_14 11_26 12_08 12_20; do
-    file="2015_${date}_S1A_IW_SLC__1SDV.zip"
+while IFS= read -r file || [[ -n "$file" ]]; do
+    [[ -z "$file" || "$file" == \#* ]] && continue
 
-    echo "Copying $file"
-    cp -n "$SOURCE/$file" "$DEST/"
-done
+    src="$SOURCE/$file"
+    dst="$DEST/$(basename "$file")"
 
-echo "All scenes copied."
+    if [[ ! -f "$src" ]]; then
+        echo "ERROR: Missing archive: $src"
+        exit 1
+    fi
+
+    echo "Copying: $file"
+    cp -n "$src" "$dst"
+
+done < "$BATCH"
+
+echo "Batch copied."
 
 
